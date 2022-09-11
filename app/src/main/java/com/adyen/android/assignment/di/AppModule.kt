@@ -1,8 +1,6 @@
 package com.adyen.android.assignment.di
 
 import android.content.Context
-import com.adyen.android.assignment.location.LocationReceiver
-import com.adyen.android.assignment.location.LocationReceiverImpl
 import com.adyen.android.assignment.utils.StringUtils
 import com.adyen.android.assignment.utils.StringUtilsImpl
 import dagger.Module
@@ -16,10 +14,6 @@ import dagger.hilt.components.SingletonComponent
 object AppModule {
 
     @Provides
-    fun provideStringUtils(@ApplicationContext context: Context): StringUtils = StringUtilsImpl(context)
-
-    @Provides
-    fun provideLocationReceiver(@ApplicationContext context: Context): LocationReceiver {
-        return LocationReceiverImpl(context)
-    }
+    fun provideStringUtils(@ApplicationContext context: Context): StringUtils =
+        StringUtilsImpl(context)
 }

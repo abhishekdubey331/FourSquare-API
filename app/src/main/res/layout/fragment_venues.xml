@@ -39,12 +39,15 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/errorMessageTextView"
+    <LinearLayout
+        android:id="@+id/retry_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:gravity="center"
-        android:visibility="gone" />
+        android:orientation="vertical">
+
+        <include layout="@layout/retry_layout" />
+
+    </LinearLayout>
 
 </FrameLayout>

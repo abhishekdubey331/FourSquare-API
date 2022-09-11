@@ -7,9 +7,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.adyen.android.assignment.api.model.Result
 import com.adyen.android.assignment.databinding.FragmentVenuesBinding
+import com.adyen.android.assignment.databinding.RetryLayoutBinding
+import com.adyen.android.assignment.extensions.gone
 import com.adyen.android.assignment.extensions.launchAndRepeatWithViewLifecycle
 import com.adyen.android.assignment.extensions.visible
 import com.adyen.android.assignment.ui.VenuesViewModel
@@ -39,9 +42,9 @@ class VenuesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         launchAndRepeatWithViewLifecycle {
             venuesViewModel.venueScreenState.collect { uiState ->
-                updateLoadingState(uiState.loading)
-                updateRecyclerView(uiState.filteredList)
-                updateErrorMessage(uiState.errorMessage)
+                handleLoadingState(uiState.loading)
+                handleVenueListState(uiState.filteredList)
+                handleErrorState(uiState.errorMessage)
             }
         }
         binding.btnCategoryFab.setOnClickListener {
@@ -49,33 +52,39 @@ class VenuesFragment : Fragment() {
         }
     }
 
-    private fun updateErrorMessage(errorMessage: String?) {
-        binding.errorMessageTextView.text = errorMessage ?: ""
-        binding.errorMessageTextView.visible()
+    private fun handleErrorState(errorMessage: String?) {
+        if (errorMessage == null) {
+            binding.retryView.gone()
+        } else {
+            val retryLayoutBinding = RetryLayoutBinding.bind(binding.root)
+            retryLayoutBinding.errorMessageTextView.text = errorMessage
+            retryLayoutBinding.retryButton.setOnClickListener {
+                venuesViewModel.fetchLocationTriggerVenueRequest()
+            }
+            binding.retryView.visible()
+        }
     }
 
-    private fun updateRecyclerView(venues: List<Result>) {
-        binding.venueListRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.venueListRecycler.adapter = mAdapter
-        mAdapter.submitList(null)
-        mAdapter.submitList(venues)
+    private fun handleVenueListState(venues: List<Result>) {
+        if (venues.isNotEmpty()) {
+            binding.venueListRecycler.layoutManager = LinearLayoutManager(requireContext())
+            binding.venueListRecycler.adapter = mAdapter
+            mAdapter.submitList(null)
+            mAdapter.submitList(venues)
+        }
     }
 
     private fun navigateToCategoryBottomSheet() {
         val action = VenuesFragmentDirections.actionVenueFragmentToCategoryBottomSheet()
-        binding.root.findNavController().navigate(action)
+        findNavController().navigate(action)
     }
 
-    private fun updateLoadingState(loading: Boolean) {
-        if (loading) showLoadingIndicator() else hideLoadingIndicator()
-    }
-
-    private fun showLoadingIndicator() {
-        binding.progressBar.visibility = View.VISIBLE
-    }
-
-    private fun hideLoadingIndicator() {
-        binding.progressBar.visibility = View.GONE
+    private fun handleLoadingState(loading: Boolean) {
+        if (loading) {
+            binding.progressBar.visibility = View.VISIBLE
+        } else {
+            binding.progressBar.visibility = View.GONE
+        }
     }
 
     override fun onDestroyView() {

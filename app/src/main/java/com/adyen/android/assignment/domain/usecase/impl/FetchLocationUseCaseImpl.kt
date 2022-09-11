@@ -1,6 +1,5 @@
 package com.adyen.android.assignment.domain.usecase.impl
 
-
 import android.Manifest
 import android.content.Context
 import android.util.Log
@@ -53,8 +52,10 @@ class FetchLocationUseCaseImpl @Inject constructor(
                     trySend(UiState.Failure(context.getString(R.string.not_able_fetch_str)))
                 }
             }.addOnFailureListener {
+                Log.d(TAG, it.message ?: "")
                 trySend(UiState.Failure(context.getString(R.string.not_able_fetch_str)))
             }.addOnCanceledListener {
+                Log.d(TAG, context.getString(R.string.location_fetch_cancelled))
                 trySend(UiState.Failure(context.getString(R.string.location_fetch_cancelled)))
             }
             awaitClose {

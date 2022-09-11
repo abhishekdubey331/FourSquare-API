@@ -15,11 +15,11 @@ class VenueAdapter :
     ListAdapter<Result, VenueAdapter
     .CategoryViewHolder>(object : DiffUtil.ItemCallback<Result>() {
         override fun areItemsTheSame(oldItem: Result, newItem: Result): Boolean {
-            return oldItem == newItem
+            return oldItem.name == newItem.name
         }
 
         override fun areContentsTheSame(oldItem: Result, newItem: Result): Boolean {
-            return oldItem == newItem
+            return oldItem.name == newItem.name
         }
     }) {
 

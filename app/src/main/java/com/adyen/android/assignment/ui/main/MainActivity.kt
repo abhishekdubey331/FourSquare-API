@@ -1,7 +1,6 @@
 package com.adyen.android.assignment.ui.main
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,29 +14,33 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.adyen.android.assignment.R
-import com.adyen.android.assignment.api.model.LatLong
 import com.adyen.android.assignment.databinding.ActivityMainBinding
+import com.adyen.android.assignment.databinding.RetryLayoutBinding
 import com.adyen.android.assignment.extensions.gone
 import com.adyen.android.assignment.extensions.visible
-import com.adyen.android.assignment.location.GeoLocationListener
-import com.adyen.android.assignment.location.LocationReceiverImpl
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val PERMISSION_ISSUE = 0
+        private const val GPS_ISSUE = 1
+    }
 
     private lateinit var binding: ActivityMainBinding
 
     private val requestFineLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                navigateToVenuesScreen(LatLong())
+                navigateToVenuesScreen()
             } else {
                 showRetryView()
                 showRationaleDialog(
                     getString(R.string.rationale_permission_title),
                     getString(R.string.rationale_permission_desc),
-                    1
+                    PERMISSION_ISSUE,
+                    getString(R.string.provide_permission)
                 )
             }
         }
@@ -51,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLocationStatus() {
         when {
-            hasLocationPermission() && isGpsEnabled() -> navigateToVenuesScreen(LatLong()).also { hideRetryView() }
+            hasLocationPermission() && isGpsEnabled() -> navigateToVenuesScreen()
 
             hasLocationPermission().not() -> requestFineLocationPermissionLauncher
                 .launch(
@@ -66,13 +69,14 @@ class MainActivity : AppCompatActivity() {
                 showRationaleDialog(
                     getString(R.string.gps_turned_off_title),
                     getString(R.string.gps_disabled_error_desc),
-                    2
+                    GPS_ISSUE,
+                    getString(R.string.enable_gps)
                 )
             }
         }
     }
 
-    private fun navigateToVenuesScreen(latLong: LatLong) {
+    private fun navigateToVenuesScreen() {
         supportFragmentManager
             .findFragmentById(R.id.home_nav_fragment)?.let {
                 if (it !is NavHostFragment)
@@ -80,9 +84,9 @@ class MainActivity : AppCompatActivity() {
                 val inflater = it.navController.navInflater
                 val graph = inflater.inflate(R.navigation.nav_graph)
                 graph.setStartDestination(R.id.venueFragment)
-                val bundle = Bundle()
-                bundle.putParcelable("latLong", latLong)
-                it.navController.setGraph(graph, bundle)
+                it.navController.setGraph(graph, null)
+            }.also {
+                hideRetryView()
             }
     }
 
@@ -112,10 +116,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showRetryView() {
-        binding.retryLayout.visible()
-        binding.retryButton.setOnClickListener {
+        val retryLayoutBinding = RetryLayoutBinding.bind(binding.root)
+        retryLayoutBinding.retryButton.setOnClickListener {
             updateLocationStatus()
         }
+        binding.retryLayout.visible()
     }
 
     private fun hideRetryView() {
@@ -129,23 +134,24 @@ class MainActivity : AppCompatActivity() {
     private fun showRationaleDialog(
         title: String,
         message: String,
-        i: Int
+        issueType: Int,
+        positiveButtonText: String
     ) {
         AlertDialog.Builder(this).setTitle(title)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton("Ok") { _, _ ->
-                when (i) {
-                    1 -> {
-                        goToAppSetting()
-                    }
-
-                    2 -> {
+            .setPositiveButton(positiveButtonText) { _, _ ->
+                when (issueType) {
+                    GPS_ISSUE -> {
                         startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
                             addCategory(Intent.CATEGORY_DEFAULT)
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         })
                     }
+                    PERMISSION_ISSUE -> {
+                        goToAppSetting()
+                    }
+                    else -> Unit
                 }
             }.show()
     }

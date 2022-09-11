@@ -17,11 +17,11 @@ if (!file("local.gradle").exists()) {
 apply from: "local.gradle"
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 31
     defaultConfig {
         applicationId "com.adyen.android.assignment"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

@@ -29,12 +29,16 @@ class VenuesViewModel @Inject constructor(
     val categoryScreenState = _categoryScreenState.asStateFlow()
 
     init {
+        fetchLocationTriggerVenueRequest()
+    }
+
+    fun fetchLocationTriggerVenueRequest() {
         viewModelScope.launch {
-            fetchLocationUseCase.invoke().collect { state ->
-                when (state) {
+            fetchLocationUseCase.invoke().collect { result ->
+                when (result) {
                     is UiState.Success -> fetchNearByVenue(
-                        state.data.latitude,
-                        state.data.longitude
+                        result.data.latitude,
+                        result.data.longitude
                     )
                     is UiState.Loading -> _venueScreenState.update {
                         it.copy(
@@ -44,7 +48,7 @@ class VenuesViewModel @Inject constructor(
                     }
                     is UiState.Failure -> _venueScreenState.update {
                         it.copy(
-                            errorMessage = it.errorMessage,
+                            errorMessage = result.errorMessage,
                             loading = false
                         )
                     }
