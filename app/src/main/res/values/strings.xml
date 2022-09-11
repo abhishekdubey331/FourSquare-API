@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Android Assignment</string>
+    <string name="message_something_went_wrong_str">Something went wrong!</string>
+    <string name="message_no_network_connected_str">No network connected!</string>
+    <string name="loading_str">"Loading…"</string>
+    <string name="location_permission_required_str">Location permission required</string>
+    <string name="we_will_need_your_location">We will need your location permission to show you results</string>
+    <string name="give_location_permission">Give Location Permission</string>
+    <string name="allow_location_str">Allow Location Access</string>
+    <string name="category">Category</string>
+    <string name="venue_categories">Filter venues by category</string>
+    <string name="if_data_not_available_str">Data not available</string>
+    <string name="venue_distance_str">%dm away from you</string>
+    <string name="not_able_fetch_str">Not able to fetch location</string>
+    <string name="location_fetch_cancelled">Location fetch cancelled</string>
+    <string name="need_location_permission_desc_str">We need location permission\nto access fetch nearby places.</string>
+    <string name="gps_disabled_error_desc">To get your exact location we need\nGPS service, please turn it on !</string>
+    <string name="enable_gps">Enable GPS</string>
+    <string name="filter">Filter</string>
+    <string name="fetching_location">Fetching Location…</string>
+
+    <string name="rationale_permission_title">We need permission to your location.</string>
+    <string name="rationale_permission_desc">This app relies on location access to fetch nearby places.Please provide location access.</string>
+
+    <string name="gps_turned_off_title">GPS is disabled.</string>
+    <string name="gps_turned_off_desc">To get your exact location we need\nGPS service, please turn it on !</string>
+
+    <string name="location_access_available">Location access is available now.</string>
+    <string name="fetch_nearby_venues_desc">Thanks for giving location access. Click OK to fetch nearby interesting places !</string>
+
+    <string name="current_location_error_message">An error occurred while getting your current location.\nPlease try again!</string>
+
+
+    <string name="retry">Retry</string>
+    <string name="clear_filter">Clear filters</string>
+
+</resources>
