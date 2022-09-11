@@ -8,7 +8,7 @@ import androidx.core.location.component1
 import androidx.core.location.component2
 import com.adyen.android.assignment.R
 import com.adyen.android.assignment.api.model.LatLong
-import com.adyen.android.assignment.common.UiState
+import com.adyen.android.assignment.common.ResultState
 import com.adyen.android.assignment.di.IoDispatcher
 import com.adyen.android.assignment.domain.usecase.contract.FetchLocationUseCase
 import com.google.android.gms.location.LocationServices
@@ -33,9 +33,9 @@ class FetchLocationUseCaseImpl @Inject constructor(
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    override fun invoke(): Flow<UiState<LatLong>> {
+    override fun invoke(): Flow<ResultState<LatLong>> {
         return callbackFlow {
-            trySend(UiState.Loading)
+            trySend(ResultState.Loading)
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.getCurrentLocation(
                 Priority.PRIORITY_HIGH_ACCURACY,
@@ -47,16 +47,16 @@ class FetchLocationUseCaseImpl @Inject constructor(
                 }).addOnSuccessListener { location ->
                 if (location != null) {
                     val (latitude, longitude) = location
-                    trySend(UiState.Success(LatLong(latitude, longitude)))
+                    trySend(ResultState.Success(LatLong(latitude, longitude)))
                 } else {
-                    trySend(UiState.Failure(context.getString(R.string.not_able_fetch_str)))
+                    trySend(ResultState.Failure(context.getString(R.string.not_able_fetch_str)))
                 }
             }.addOnFailureListener {
                 Log.d(TAG, it.message ?: "")
-                trySend(UiState.Failure(context.getString(R.string.not_able_fetch_str)))
+                trySend(ResultState.Failure(context.getString(R.string.not_able_fetch_str)))
             }.addOnCanceledListener {
                 Log.d(TAG, context.getString(R.string.location_fetch_cancelled))
-                trySend(UiState.Failure(context.getString(R.string.location_fetch_cancelled)))
+                trySend(ResultState.Failure(context.getString(R.string.location_fetch_cancelled)))
             }
             awaitClose {
                 Log.d(TAG, "Stopped observing location update")

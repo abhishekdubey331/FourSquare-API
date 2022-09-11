@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adyen.android.assignment.api.model.Category
 import com.adyen.android.assignment.api.model.Result
-import com.adyen.android.assignment.common.UiState
+import com.adyen.android.assignment.common.ResultState
 import com.adyen.android.assignment.domain.usecase.contract.FetchLocationUseCase
 import com.adyen.android.assignment.domain.usecase.contract.GetVenuesUseCase
 import com.adyen.android.assignment.ui.categories.state.CategoryScreenState
@@ -36,17 +36,20 @@ class VenuesViewModel @Inject constructor(
         viewModelScope.launch {
             fetchLocationUseCase.invoke().collect { result ->
                 when (result) {
-                    is UiState.Success -> fetchNearByVenue(
-                        result.data.latitude,
-                        result.data.longitude
-                    )
-                    is UiState.Loading -> _venueScreenState.update {
+
+                    is ResultState.Loading -> _venueScreenState.update {
                         it.copy(
                             loading = true,
                             errorMessage = null
                         )
                     }
-                    is UiState.Failure -> _venueScreenState.update {
+
+                    is ResultState.Success -> fetchNearByVenues(
+                        result.data.latitude,
+                        result.data.longitude
+                    )
+
+                    is ResultState.Failure -> _venueScreenState.update {
                         it.copy(
                             errorMessage = result.errorMessage,
                             loading = false
@@ -57,18 +60,18 @@ class VenuesViewModel @Inject constructor(
         }
     }
 
-    private fun fetchNearByVenue(latitude: Double, longitude: Double) {
+    private fun fetchNearByVenues(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             getVenuesUseCase.invoke(latitude, longitude).collect { result ->
                 when (result) {
-                    is UiState.Loading -> _venueScreenState.update {
+                    is ResultState.Loading -> _venueScreenState.update {
                         it.copy(
                             loading = true,
                             errorMessage = null
                         )
                     }
 
-                    is UiState.Success -> {
+                    is ResultState.Success -> {
                         _venueScreenState.update {
                             it.copy(
                                 allVenueList = result.data,
@@ -82,9 +85,9 @@ class VenuesViewModel @Inject constructor(
                         }
                     }
 
-                    is UiState.Failure -> _venueScreenState.update {
+                    is ResultState.Failure -> _venueScreenState.update {
                         it.copy(
-                            errorMessage = it.errorMessage,
+                            errorMessage = result.errorMessage,
                             loading = false
                         )
                     }
@@ -93,7 +96,7 @@ class VenuesViewModel @Inject constructor(
         }
     }
 
-    private fun getCategoryList(result: UiState.Success<List<Result>>) = result.data.asSequence()
+    private fun getCategoryList(result: ResultState.Success<List<Result>>) = result.data.asSequence()
         .map { it.categories }
         .flatten()
         .distinct()

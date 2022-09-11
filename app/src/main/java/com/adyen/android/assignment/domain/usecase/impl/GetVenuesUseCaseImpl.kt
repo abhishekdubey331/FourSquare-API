@@ -1,7 +1,7 @@
 package com.adyen.android.assignment.domain.usecase.impl
 
 
-import com.adyen.android.assignment.common.UiState
+import com.adyen.android.assignment.common.ResultState
 import com.adyen.android.assignment.di.IoDispatcher
 import com.adyen.android.assignment.domain.repository.contract.VenueRepository
 import com.adyen.android.assignment.domain.usecase.contract.GetVenuesUseCase
@@ -14,20 +14,20 @@ import java.io.IOException
 import javax.inject.Inject
 
 class GetVenuesUseCaseImpl @Inject constructor(
-    private val repository: VenueRepository,
+    private val venueRepository: VenueRepository,
     private val stringUtils: StringUtils,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : GetVenuesUseCase {
 
     override fun invoke(latitude: Double, longitude: Double) = flow {
         try {
-            emit(UiState.Loading)
-            val venues = repository.fetchVenues(latitude, longitude)
-            emit(UiState.Success(venues))
+            emit(ResultState.Loading)
+            val venues = venueRepository.fetchVenues(latitude, longitude)
+            emit(ResultState.Success(venues))
         } catch (e: HttpException) {
-            emit(UiState.Failure(stringUtils.somethingWentWrong()))
+            emit(ResultState.Failure(stringUtils.somethingWentWrong()))
         } catch (e: IOException) {
-            emit(UiState.Failure(stringUtils.noNetworkErrorMessage()))
+            emit(ResultState.Failure(stringUtils.noNetworkErrorMessage()))
         }
     }.flowOn(ioDispatcher)
 }

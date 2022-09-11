@@ -1,9 +1,9 @@
 package com.adyen.android.assignment.api
 
-class VenueRecommendationsQueryBuilder : VenueQueryBuilder() {
+open class VenueRecommendationsQueryBuilder : VenueQueryBuilder() {
     private var latitudeLongitude: String? = null
 
-    fun setLatitudeLongitude(latitude: Double, longitude: Double): VenueRecommendationsQueryBuilder {
+    open fun setLatitudeLongitude(latitude: Double, longitude: Double): VenueRecommendationsQueryBuilder {
         this.latitudeLongitude = "$latitude,$longitude"
         return this
     }

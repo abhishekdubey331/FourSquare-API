@@ -1,39 +1,39 @@
 package com.adyen.android.assignment.ui.main
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.adyen.android.assignment.R
-import com.adyen.android.assignment.databinding.ActivityMainBinding
+import com.adyen.android.assignment.databinding.ActivityParentBinding
 import com.adyen.android.assignment.databinding.RetryLayoutBinding
 import com.adyen.android.assignment.extensions.gone
+import com.adyen.android.assignment.extensions.hasLocationPermission
+import com.adyen.android.assignment.extensions.isGpsEnabled
 import com.adyen.android.assignment.extensions.visible
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class ParentActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_ISSUE = 0
         private const val GPS_ISSUE = 1
+        const val FINE_LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
+        const val COARSE_LOCATION_PERMISSION = Manifest.permission.ACCESS_COARSE_LOCATION
     }
 
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityParentBinding
 
-    private val requestFineLocationPermissionLauncher =
+    private val requestFineLocationPermissionLauncher by lazy {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                navigateToVenuesScreen()
+            if (permissions[FINE_LOCATION_PERMISSION] == true || permissions[COARSE_LOCATION_PERMISSION] == true) {
+                handleLocationStatus()
             } else {
                 showRetryView()
                 showRationaleDialog(
@@ -44,25 +44,20 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityParentBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        updateLocationStatus()
+        handleLocationStatus()
     }
 
-    private fun updateLocationStatus() {
+    private fun handleLocationStatus() {
         when {
             hasLocationPermission() && isGpsEnabled() -> navigateToVenuesScreen()
 
-            hasLocationPermission().not() -> requestFineLocationPermissionLauncher
-                .launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
+            hasLocationPermission().not() -> requestLocationPermissions()
 
             isGpsEnabled().not() -> {
                 showRetryView()
@@ -76,32 +71,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToVenuesScreen() {
-        supportFragmentManager
-            .findFragmentById(R.id.home_nav_fragment)?.let {
-                if (it !is NavHostFragment)
-                    return
+    private fun requestLocationPermissions() {
+        requestFineLocationPermissionLauncher.launch(
+            arrayOf(
+                FINE_LOCATION_PERMISSION,
+                COARSE_LOCATION_PERMISSION
+            )
+        )
+    }
+
+    private fun navigateToVenuesScreen() = supportFragmentManager
+        .findFragmentById(R.id.home_nav_fragment)?.let {
+            if (it !is NavHostFragment) {
+                showRetryView()
+            } else {
                 val inflater = it.navController.navInflater
                 val graph = inflater.inflate(R.navigation.nav_graph)
                 graph.setStartDestination(R.id.venueFragment)
                 it.navController.setGraph(graph, null)
-            }.also {
-                hideRetryView()
             }
-    }
-
-    private fun isGpsEnabled(): Boolean {
-        val mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-    }
-
-    private fun hasLocationPermission() = ActivityCompat.checkSelfPermission(
-        this,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-        this,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
+        }.also {
+            hideRetryView()
+        }
 
     private fun goToAppSetting() {
         startActivity(
@@ -118,7 +109,7 @@ class MainActivity : AppCompatActivity() {
     private fun showRetryView() {
         val retryLayoutBinding = RetryLayoutBinding.bind(binding.root)
         retryLayoutBinding.retryButton.setOnClickListener {
-            updateLocationStatus()
+            handleLocationStatus()
         }
         binding.retryLayout.visible()
     }
@@ -137,7 +128,7 @@ class MainActivity : AppCompatActivity() {
         issueType: Int,
         positiveButtonText: String
     ) {
-        AlertDialog.Builder(this).setTitle(title)
+        AlertDialog.Builder(this@ParentActivity).setTitle(title)
             .setMessage(message)
             .setCancelable(false)
             .setPositiveButton(positiveButtonText) { _, _ ->

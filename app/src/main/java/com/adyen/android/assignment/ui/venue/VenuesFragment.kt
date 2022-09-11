@@ -1,12 +1,12 @@
 package com.adyen.android.assignment.ui.venue
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.adyen.android.assignment.api.model.Result
@@ -63,6 +63,7 @@ class VenuesFragment : Fragment() {
             }
             binding.retryView.visible()
         }
+        Log.d("handleErrorState", "Error Message" + errorMessage?.toString() + "")
     }
 
     private fun handleVenueListState(venues: List<Result>) {

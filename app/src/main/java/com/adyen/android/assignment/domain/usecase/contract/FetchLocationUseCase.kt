@@ -1,11 +1,11 @@
 package com.adyen.android.assignment.domain.usecase.contract
 
 import com.adyen.android.assignment.api.model.LatLong
-import com.adyen.android.assignment.common.UiState
+import com.adyen.android.assignment.common.ResultState
 import kotlinx.coroutines.flow.Flow
 
 interface FetchLocationUseCase {
 
-    operator fun invoke() : Flow<UiState<LatLong>>
+    operator fun invoke() : Flow<ResultState<LatLong>>
 
 }
