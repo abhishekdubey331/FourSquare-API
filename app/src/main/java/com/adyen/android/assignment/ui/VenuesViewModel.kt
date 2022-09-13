@@ -1,5 +1,7 @@
 package com.adyen.android.assignment.ui
 
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adyen.android.assignment.api.model.Category
@@ -19,8 +21,15 @@ import javax.inject.Inject
 @HiltViewModel
 class VenuesViewModel @Inject constructor(
     private val getVenuesUseCase: GetVenuesUseCase,
-    private val fetchLocationUseCase: FetchLocationUseCase
+    private val fetchLocationUseCase: FetchLocationUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "VenuesViewModel"
+        private const val LATITUDE_KEY = "LATITUDE"
+        private const val LONGITUDE_KEY = "LONGITUDE"
+    }
 
     private val _venueScreenState = MutableStateFlow(VenueScreenState())
     val venueScreenState = _venueScreenState.asStateFlow()
@@ -29,7 +38,15 @@ class VenuesViewModel @Inject constructor(
     val categoryScreenState = _categoryScreenState.asStateFlow()
 
     init {
-        fetchLocationTriggerVenueRequest()
+        if (savedStateHandle.contains(LATITUDE_KEY) && savedStateHandle.contains(LONGITUDE_KEY)) {
+            val latitude = savedStateHandle.get<Double>(LATITUDE_KEY) ?: 0.0
+            val longitude = savedStateHandle.get<Double>(LONGITUDE_KEY) ?: 0.0
+            fetchNearByVenues(latitude, longitude)
+            Log.d(TAG, "Using Previously fetched coordinates: $latitude $longitude")
+        } else {
+            Log.d(TAG, "Fetching New Location")
+            fetchLocationTriggerVenueRequest()
+        }
     }
 
     fun fetchLocationTriggerVenueRequest() {
@@ -94,33 +111,33 @@ class VenuesViewModel @Inject constructor(
                 }
             }
         }
+        savedStateHandle[LATITUDE_KEY] = latitude
+        savedStateHandle[LONGITUDE_KEY] = longitude
     }
 
-    private fun getCategoryList(result: ResultState.Success<List<Result>>) = result.data.asSequence()
-        .map { it.categories }
-        .flatten()
-        .distinct()
-        .toList()
+    private fun getCategoryList(result: ResultState.Success<List<Result>>) =
+        result.data.asSequence()
+            .map { it.categories }
+            .flatten()
+            .distinct()
+            .toList()
 
-    fun updateFilteredList(category: Category) = _venueScreenState
-        .update {
-            it.copy(
-                filteredList = getFilteredListByCategory(category)
-            )
-        }.also {
-            _categoryScreenState.update {
-                it.copy(activeCategory = category)
+    fun updateFilteredList(category: Category) {
+        _venueScreenState.update {
+            it.copy(filteredList = getFilteredListByCategory(category.id))
+        }
+        _categoryScreenState.update { it.copy(activeCategory = category) }
+    }
+
+    private fun getFilteredListByCategory(categoryId: String) = venueScreenState.value
+        .allVenueList.filter { venue ->
+            venue.categories.any {
+                it.id == categoryId
             }
         }
 
-    fun clearFilters() = _venueScreenState.update {
-        it.copy(filteredList = it.allVenueList)
-    }.also {
+    fun clearFilters() {
+        _venueScreenState.update { it.copy(filteredList = it.allVenueList) }
         _categoryScreenState.update { it.copy(activeCategory = null) }
     }
-
-    private fun getFilteredListByCategory(category: Category) = venueScreenState.value
-        .allVenueList.filter { value ->
-            value.categories.contains(category)
-        }
 }

@@ -1,7 +1,6 @@
 package com.adyen.android.assignment.ui.venue
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,17 +52,16 @@ class VenuesFragment : Fragment() {
     }
 
     private fun handleErrorState(errorMessage: String?) {
-        if (errorMessage == null) {
-            binding.retryView.gone()
-        } else {
+        errorMessage?.let {
             val retryLayoutBinding = RetryLayoutBinding.bind(binding.root)
             retryLayoutBinding.errorMessageTextView.text = errorMessage
             retryLayoutBinding.retryButton.setOnClickListener {
                 venuesViewModel.fetchLocationTriggerVenueRequest()
             }
             binding.retryView.visible()
+        } ?: run {
+            binding.retryView.gone()
         }
-        Log.d("handleErrorState", "Error Message" + errorMessage?.toString() + "")
     }
 
     private fun handleVenueListState(venues: List<Result>) {

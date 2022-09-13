@@ -6,5 +6,5 @@ data class Result(
     val geocode: GeoCode,
     val location: Location,
     val name: String,
-    val timezone: String,
+    val timezone: String
 )
