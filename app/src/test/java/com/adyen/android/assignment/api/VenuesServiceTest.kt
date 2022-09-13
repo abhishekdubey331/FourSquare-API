@@ -36,7 +36,6 @@ class VenuesServiceTest : ApiAbstract<VenuesService>() {
         mockWebServer.takeRequest()
 
         // Then
-
         response.results.run {
             assertThat(size).isEqualTo(5)
             assertThat(first().name).isEqualTo("BREN Avalon")

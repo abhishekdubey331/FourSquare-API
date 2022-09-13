@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.adyen.android.assignment.R
 import com.adyen.android.assignment.api.model.Category
 import com.adyen.android.assignment.databinding.ViewholderCategoryItemBinding
 
@@ -44,7 +43,7 @@ class CategoriesAdapter(
 
         fun bind(category: Category) {
             if (selectedCategoryId == category.id) {
-               binding.categoryText.setBackgroundColor(Color.LTGRAY)
+                binding.categoryText.setBackgroundColor(Color.LTGRAY)
             }
             binding.root.setOnClickListener {
                 categorySelect(category)

@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface FetchLocationUseCase {
 
-    operator fun invoke() : Flow<ResultState<LatLong>>
+    operator fun invoke(): Flow<ResultState<LatLong>>
 
 }
