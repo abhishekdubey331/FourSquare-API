@@ -2,6 +2,7 @@ package com.adyen.android.assignment.domain.repository
 
 import com.adyen.android.assignment.api.VenueRecommendationsQueryBuilder
 import com.adyen.android.assignment.api.VenuesService
+import com.adyen.android.assignment.api.model.LatLong
 import com.adyen.android.assignment.api.model.ResponseWrapper
 import com.adyen.android.assignment.domain.repository.contract.VenueRepository
 import com.adyen.android.assignment.domain.repository.impl.VenuesRepositoryImpl
@@ -26,6 +27,7 @@ class VenueRepositoryTest {
 
     @Mock
     lateinit var venueService: VenuesService
+    private val testLatLong = LatLong(0.0, 0.0)
 
     @Before
     fun setup() {
@@ -37,17 +39,16 @@ class VenueRepositoryTest {
     fun `test get venue list success`() = runTest {
         // Given
         val sampleResult = MockData.mockVenuesList
-        val latitude = 0.0
-        val longitude = 0.0
+        val (lat, long) = testLatLong
         val query = VenueRecommendationsQueryBuilder()
-            .setLatitudeLongitude(latitude, longitude)
+            .setLatitudeLongitude(lat, long)
             .build()
 
         val responseWrapper = ResponseWrapper(sampleResult)
 
         // When
         whenever(venueService.getVenueRecommendations(query)).thenReturn(responseWrapper)
-        val testResult = venueRepository.fetchVenues(latitude, longitude)
+        val testResult = venueRepository.fetchVenues(lat, long)
 
         // Then
         assertThat(testResult.size).isEqualTo(sampleResult.size)

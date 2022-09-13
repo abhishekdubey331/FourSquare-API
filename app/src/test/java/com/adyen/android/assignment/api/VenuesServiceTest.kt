@@ -1,5 +1,6 @@
 package com.adyen.android.assignment.api
 
+import com.adyen.android.assignment.api.model.LatLong
 import com.adyen.android.assignment.base.ApiAbstract
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -8,10 +9,13 @@ import org.junit.Test
 
 class VenuesServiceTest : ApiAbstract<VenuesService>() {
 
-    private lateinit var apiService: VenuesService
-    companion object{
+    companion object {
         private const val JSON_RES_FILE_NAME = "/venues_list_response.json"
     }
+
+    private lateinit var apiService: VenuesService
+
+    private val testLatLong = LatLong(0.0, 0.0)
 
     @Before
     fun setUp() {
@@ -20,8 +24,9 @@ class VenuesServiceTest : ApiAbstract<VenuesService>() {
 
     @Test
     fun `test get venue recommendations returns list of venues`() = runBlocking {
+        val (lat, long) = testLatLong
         val query = VenueRecommendationsQueryBuilder()
-            .setLatitudeLongitude(1.0, 1.0)
+            .setLatitudeLongitude(lat, long)
             .build()
         // Given
         enqueueResponse(JSON_RES_FILE_NAME)
@@ -31,9 +36,12 @@ class VenuesServiceTest : ApiAbstract<VenuesService>() {
         mockWebServer.takeRequest()
 
         // Then
-        assertThat(response.results.size).isEqualTo(5)
-        assertThat(response.results.first().name).isEqualTo("BREN Avalon")
-        assertThat(response.results.first().categories.first().name).isEqualTo("Residential Building")
-        assertThat(response.results.last().name).isEqualTo("Jaak Hydro Pneumatic Company")
+
+        response.results.run {
+            assertThat(size).isEqualTo(5)
+            assertThat(first().name).isEqualTo("BREN Avalon")
+            assertThat(first().categories.first().name).isEqualTo("Residential Building")
+            assertThat(last().name).isEqualTo("Jaak Hydro Pneumatic Company")
+        }
     }
 }

@@ -70,10 +70,12 @@ class VenuesViewModelTest {
         venuesViewModel = VenuesViewModel(getVenuesUseCase, fetchLocationUseCase, savedStateHandle)
 
         // Then
-        assertThat(venuesViewModel.venueScreenState.value.allVenueList.size).isEqualTo(MockData.mockVenuesList.size)
-        assertThat(venuesViewModel.venueScreenState.value.filteredList.size).isEqualTo(MockData.mockVenuesList.size)
-        assertThat(venuesViewModel.categoryScreenState.value.categories.size).isGreaterThan(0)
-        assertThat(venuesViewModel.venueScreenState.value.errorMessage).isNull()
+        venuesViewModel.run {
+            assertThat(venueScreenState.value.allVenueList.size).isEqualTo(MockData.mockVenuesList.size)
+            assertThat(venueScreenState.value.filteredList.size).isEqualTo(MockData.mockVenuesList.size)
+            assertThat(categoryScreenState.value.categories.size).isGreaterThan(0)
+            assertThat(venueScreenState.value.errorMessage).isNull()
+        }
     }
 
     @Test
@@ -98,12 +100,14 @@ class VenuesViewModelTest {
         venuesViewModel.updateFilteredListByCategory(category)
 
         // Then
-        assertThat(venuesViewModel.venueScreenState.value.allVenueList.size).isEqualTo(MockData.mockVenuesList.size)
-        assertThat(venuesViewModel.venueScreenState.value.filteredList.size).isEqualTo(1)
-        assertThat(venuesViewModel.categoryScreenState.value.categories.first()).isEqualTo(category)
-        assertThat(venuesViewModel.categoryScreenState.value.activeCategory).isNotNull()
-        assertThat(venuesViewModel.categoryScreenState.value.activeCategory).isEqualTo(category)
-        assertThat(venuesViewModel.venueScreenState.value.errorMessage).isNull()
+        venuesViewModel.run {
+            assertThat(venueScreenState.value.allVenueList.size).isEqualTo(MockData.mockVenuesList.size)
+            assertThat(venueScreenState.value.filteredList.size).isEqualTo(1)
+            assertThat(categoryScreenState.value.categories.first()).isEqualTo(category)
+            assertThat(categoryScreenState.value.activeCategory).isNotNull()
+            assertThat(categoryScreenState.value.activeCategory).isEqualTo(category)
+            assertThat(venueScreenState.value.errorMessage).isNull()
+        }
     }
 
     @Test
@@ -127,8 +131,8 @@ class VenuesViewModelTest {
         venuesViewModel.updateFilteredListByCategory(MockData.mockVenuesList.first().categories.first())
 
         val allVenueList = venuesViewModel.venueScreenState.value.allVenueList
-        var filteredList = venuesViewModel.venueScreenState.value.filteredList
         val categoriesList = venuesViewModel.categoryScreenState.value.categories
+        var filteredList = venuesViewModel.venueScreenState.value.filteredList
 
         // Then
         assertThat(allVenueList.size).isEqualTo(MockData.mockVenuesList.size)
@@ -143,5 +147,55 @@ class VenuesViewModelTest {
         // Then
         assertThat(filteredList.size).isEqualTo(allVenueList.size)
         assertThat(venuesViewModel.categoryScreenState.value.activeCategory).isNull()
+    }
+
+    @Test
+    fun `test fetch location failure`() = runTest {
+        // Given
+        val sampleErrorResponse = "Fetch Location Failure!"
+        val latLongFlow = flow {
+            emit(ResultState.Failure(sampleErrorResponse))
+        }
+
+        // When
+        whenever(fetchLocationUseCase.invoke()).thenReturn(latLongFlow)
+        // Invoke
+        venuesViewModel = VenuesViewModel(getVenuesUseCase, fetchLocationUseCase, savedStateHandle)
+
+        // Then
+        venuesViewModel.run {
+            assertThat(venueScreenState.value.allVenueList.size).isEqualTo(0)
+            assertThat(venueScreenState.value.filteredList.size).isEqualTo(0)
+            assertThat(categoryScreenState.value.categories.size).isEqualTo(0)
+            assertThat(venueScreenState.value.errorMessage).isEqualTo(sampleErrorResponse)
+        }
+    }
+
+    @Test
+    fun `test fetch location success but venues api failure`() = runTest {
+        // Given
+        val sampleErrorResponse = "Something Went Wrong!"
+        val latLongFlow = flow {
+            emit(ResultState.Success(testLatLong))
+        }
+
+        val venuesFlow = flow {
+            emit(ResultState.Failure(sampleErrorResponse))
+        }
+
+        // When
+        whenever(fetchLocationUseCase.invoke()).thenReturn(latLongFlow)
+        val (lat, long) = testLatLong
+        whenever(getVenuesUseCase.invoke(lat, long)).thenReturn(venuesFlow)
+        // Invoke
+        venuesViewModel = VenuesViewModel(getVenuesUseCase, fetchLocationUseCase, savedStateHandle)
+
+        // Then
+        venuesViewModel.run {
+            assertThat(venueScreenState.value.allVenueList.size).isEqualTo(0)
+            assertThat(venueScreenState.value.filteredList.size).isEqualTo(0)
+            assertThat(categoryScreenState.value.categories.size).isEqualTo(0)
+            assertThat(venueScreenState.value.errorMessage).isEqualTo(sampleErrorResponse)
+        }
     }
 }

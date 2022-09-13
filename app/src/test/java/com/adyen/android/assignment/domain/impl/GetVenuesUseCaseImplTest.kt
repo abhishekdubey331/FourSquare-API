@@ -1,5 +1,6 @@
 package com.adyen.android.assignment.domain.impl
 
+import com.adyen.android.assignment.api.model.LatLong
 import com.adyen.android.assignment.base.MainCoroutinesRule
 import com.adyen.android.assignment.common.ResultState
 import com.adyen.android.assignment.domain.repository.contract.VenueRepository
@@ -39,6 +40,8 @@ class GetVenuesUseCaseImplTest {
 
     private lateinit var getVenuesUseCase: GetVenuesUseCase
 
+    private val testLatLong = LatLong(0.0, 0.0)
+
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
@@ -53,12 +56,11 @@ class GetVenuesUseCaseImplTest {
     fun `test fetch venues success`() = runTest {
         // Given
         val sampleVenueList = MockData.mockVenuesList
-        val latitude = 0.0
-        val longitude = 0.0
 
         // When
-        whenever(venueRepository.fetchVenues(latitude, longitude)).thenReturn(sampleVenueList)
-        val testResult = getVenuesUseCase.invoke(latitude, longitude).toList()
+        val (lat, long) = testLatLong
+        whenever(venueRepository.fetchVenues(lat, long)).thenReturn(sampleVenueList)
+        val testResult = getVenuesUseCase.invoke(lat, long).toList()
 
         // Then
         assertThat(testResult.first()).isInstanceOf(ResultState.Loading::class.java)
@@ -66,29 +68,28 @@ class GetVenuesUseCaseImplTest {
         val venueList = (testResult.last() as ResultState.Success).data
         assertThat(venueList).isEqualTo(sampleVenueList)
         assertThat(venueList).hasSize(sampleVenueList.size)
-        verify(venueRepository, times(1)).fetchVenues(latitude, longitude)
+        verify(venueRepository, times(1)).fetchVenues(lat, long)
     }
 
     @Test
     fun `test fetch venues failure`() = runTest {
         // Given
-        val latitude = 0.0
-        val longitude = 0.0
+        val (lat, long) = testLatLong
         val sampleErrorResponse = "Something Went Wrong!"
         val body = "Test Error Message".toResponseBody("text/html".toMediaTypeOrNull())
         val httpException = HttpException(Response.error<ResponseBody>(500, body))
 
         // When
-        whenever(venueRepository.fetchVenues(latitude, longitude)).thenThrow(httpException)
+        whenever(venueRepository.fetchVenues(lat, long)).thenThrow(httpException)
         whenever(stringUtils.somethingWentWrong()).thenReturn(sampleErrorResponse)
-        val testResult = getVenuesUseCase.invoke(latitude, longitude).toList()
+        val testResult = getVenuesUseCase.invoke(lat, long).toList()
 
         // Then
-        assertThat(testResult.first()).isInstanceOf(ResultState.Loading::class.java)
-        assertThat(testResult.last()).isInstanceOf(ResultState.Failure::class.java)
-        assertThat((testResult.last() as ResultState.Failure).errorMessage).isEqualTo(
-            sampleErrorResponse
-        )
-        verify(venueRepository, times(1)).fetchVenues(latitude, longitude)
+        testResult.run {
+            assertThat(first()).isInstanceOf(ResultState.Loading::class.java)
+            assertThat(last()).isInstanceOf(ResultState.Failure::class.java)
+            assertThat((last() as ResultState.Failure).errorMessage).isEqualTo(sampleErrorResponse)
+        }
+        verify(venueRepository, times(1)).fetchVenues(lat, long)
     }
 }
