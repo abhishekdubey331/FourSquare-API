@@ -15,8 +15,6 @@ import com.adyen.android.assignment.extensions.visible
 import com.adyen.android.assignment.ui.VenuesViewModel
 import com.adyen.android.assignment.ui.categories.adapter.CategoriesAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import okhttp3.internal.notifyAll
-
 
 class CategoryBottomSheet : BottomSheetDialogFragment() {
 
@@ -59,7 +57,7 @@ class CategoryBottomSheet : BottomSheetDialogFragment() {
 
     private fun shoWRecyclerView(categories: List<Category>, selectedCategoryId: String?) {
         mAdapter = CategoriesAdapter(selectedCategoryId) {
-            venuesViewModel.updateFilteredList(it)
+            venuesViewModel.updateFilteredListByCategory(it)
             findNavController().navigateUp()
         }
         binding.categoryListRecycler.layoutManager = LinearLayoutManager(requireContext())

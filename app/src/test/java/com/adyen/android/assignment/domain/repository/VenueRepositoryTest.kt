@@ -36,7 +36,7 @@ class VenueRepositoryTest {
     @Test
     fun `test get venue list success`() = runTest {
         // Given
-        val sampleResult = MockData.mockResultData()
+        val sampleResult = MockData.mockVenuesList
         val latitude = 0.0
         val longitude = 0.0
         val query = VenueRecommendationsQueryBuilder()

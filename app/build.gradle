@@ -54,7 +54,7 @@ dependencies {
     // Retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-moshi:$moshi_version"
-    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_interceptor_version"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_version"
 
     //Dagger - Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"
@@ -70,7 +70,10 @@ dependencies {
 
     // Mockito
     testImplementation "org.mockito:mockito-core:$mockito_core_version"
+    testImplementation "org.mockito:mockito-inline:$mockito_inline_version"
     androidTestImplementation "org.mockito:mockito-android:$mockito_android_version"
+
+    testImplementation "com.squareup.okhttp3:mockwebserver:$okhttp_version"
 
     // Truth
     testImplementation "com.google.truth:truth:$truth_version"

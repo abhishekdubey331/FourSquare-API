@@ -1,6 +1,5 @@
 package com.adyen.android.assignment.ui
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,9 +41,7 @@ class VenuesViewModel @Inject constructor(
             val latitude = savedStateHandle.get<Double>(LATITUDE_KEY) ?: 0.0
             val longitude = savedStateHandle.get<Double>(LONGITUDE_KEY) ?: 0.0
             fetchNearByVenues(latitude, longitude)
-            Log.d(TAG, "Using Previously fetched coordinates: $latitude $longitude")
         } else {
-            Log.d(TAG, "Fetching New Location")
             fetchLocationTriggerVenueRequest()
         }
     }
@@ -61,10 +58,16 @@ class VenuesViewModel @Inject constructor(
                         )
                     }
 
-                    is ResultState.Success -> fetchNearByVenues(
-                        result.data.latitude,
-                        result.data.longitude
-                    )
+                    is ResultState.Success -> {
+                        val latitude = result.data.latitude
+                        val longitude = result.data.longitude
+                        savedStateHandle[LATITUDE_KEY] = latitude
+                        savedStateHandle[LONGITUDE_KEY] = longitude
+                        fetchNearByVenues(
+                            result.data.latitude,
+                            result.data.longitude
+                        )
+                    }
 
                     is ResultState.Failure -> _venueScreenState.update {
                         it.copy(
@@ -91,13 +94,13 @@ class VenuesViewModel @Inject constructor(
                     is ResultState.Success -> {
                         _venueScreenState.update {
                             it.copy(
-                                allVenueList = result.data,
+                                allVenueList = result.data,  // on first fetch main list and filtered list are same
                                 filteredList = result.data,
                                 loading = false
                             )
                         }.also {
                             _categoryScreenState.update { categoryState ->
-                                categoryState.copy(categories = getCategoryList(result))
+                                categoryState.copy(categories = getCategoryList(result.data))
                             }
                         }
                     }
@@ -111,18 +114,15 @@ class VenuesViewModel @Inject constructor(
                 }
             }
         }
-        savedStateHandle[LATITUDE_KEY] = latitude
-        savedStateHandle[LONGITUDE_KEY] = longitude
     }
 
-    private fun getCategoryList(result: ResultState.Success<List<Result>>) =
-        result.data.asSequence()
-            .map { it.categories }
-            .flatten()
-            .distinct()
-            .toList()
+    private fun getCategoryList(result: List<Result>) = result.asSequence()
+        .map { it.categories }
+        .flatten()
+        .distinct()
+        .toList()
 
-    fun updateFilteredList(category: Category) {
+    fun updateFilteredListByCategory(category: Category) {
         _venueScreenState.update {
             it.copy(filteredList = getFilteredListByCategory(category.id))
         }

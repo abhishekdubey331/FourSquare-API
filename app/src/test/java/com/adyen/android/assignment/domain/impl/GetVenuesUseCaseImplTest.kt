@@ -52,7 +52,7 @@ class GetVenuesUseCaseImplTest {
     @Test
     fun `test fetch venues success`() = runTest {
         // Given
-        val sampleVenueList = MockData.mockResultData()
+        val sampleVenueList = MockData.mockVenuesList
         val latitude = 0.0
         val longitude = 0.0
 
