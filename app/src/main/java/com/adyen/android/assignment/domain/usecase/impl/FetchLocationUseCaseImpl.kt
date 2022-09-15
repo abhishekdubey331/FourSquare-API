@@ -32,6 +32,10 @@ class FetchLocationUseCaseImpl @Inject constructor(
         private const val TAG = "FetchLocation"
     }
 
+    /**
+     * This functions returns the response coming from the API
+     *  @Emits Flow<ResultState<LatLong>> Emits state like Loading, Error and Success for LatLong
+     */
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun invoke(): Flow<ResultState<LatLong>> {
         return callbackFlow {

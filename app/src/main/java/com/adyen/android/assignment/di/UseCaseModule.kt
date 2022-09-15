@@ -20,11 +20,11 @@ object UseCaseModule {
 
     @Provides
     fun getVenuesUseCase(
-        VenueRepository: VenueRepository,
+        venueRepository: VenueRepository,
         stringUtils: StringUtils,
         @IoDispatcher coroutineDispatcher: CoroutineDispatcher
     ): GetVenuesUseCase = GetVenuesUseCaseImpl(
-        VenueRepository, stringUtils, coroutineDispatcher
+        venueRepository, stringUtils, coroutineDispatcher
     )
 
     @Provides

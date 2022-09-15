@@ -65,14 +65,18 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
-    // Location
-    implementation 'com.google.android.gms:play-services-location:20.0.0'
+    // Play services
+    implementation "com.google.android.gms:play-services-location:$play_services_version"
 
+    /***
+     *  ************  Testing Libraries Below *************
+     */
     // Mockito
     testImplementation "org.mockito:mockito-core:$mockito_core_version"
     testImplementation "org.mockito:mockito-inline:$mockito_inline_version"
     androidTestImplementation "org.mockito:mockito-android:$mockito_android_version"
 
+    // Okhttp Mock Server
     testImplementation "com.squareup.okhttp3:mockwebserver:$okhttp_version"
 
     // Truth

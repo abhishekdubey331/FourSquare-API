@@ -53,9 +53,16 @@ class ParentActivity : AppCompatActivity() {
         handleLocationStatus()
     }
 
+    /**
+     * This function, checks/rechecks permission/gps status
+     * and if all required conditions met then move to VenuesFragment
+     */
     private fun handleLocationStatus() {
         when {
-            hasLocationPermission() && isGpsEnabled() -> navigateToVenuesScreen()
+            hasLocationPermission() && isGpsEnabled() -> {
+                hideRetryView()
+                navigateToVenuesScreen()
+            }
 
             hasLocationPermission().not() -> requestLocationPermissions()
 
@@ -80,6 +87,10 @@ class ParentActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Initializes the nav graph and sets the start destination for
+     *  Venues List Screen
+     */
     private fun navigateToVenuesScreen() = supportFragmentManager
         .findFragmentById(R.id.home_nav_fragment)?.let {
             if (it !is NavHostFragment) {
@@ -90,10 +101,11 @@ class ParentActivity : AppCompatActivity() {
                 graph.setStartDestination(R.id.venueFragment)
                 it.navController.setGraph(graph, null)
             }
-        }.also {
-            hideRetryView()
         }
 
+    /**
+     *  Open app settings to allow user to provide location permission
+     */
     private fun goToAppSetting() {
         startActivity(
             Intent(
@@ -106,6 +118,11 @@ class ParentActivity : AppCompatActivity() {
         )
     }
 
+
+    /**
+     * Shows retry view to allow user to retry location fetching process
+     * once GPS is on and permissions are met
+     */
     private fun showRetryView() {
         val retryLayoutBinding = RetryLayoutBinding.bind(binding.root)
         retryLayoutBinding.retryButton.setOnClickListener {
@@ -114,6 +131,10 @@ class ParentActivity : AppCompatActivity() {
         binding.retryLayout.visible()
     }
 
+    /**
+     * Shows rationale dialog for displaying why the app needs permission
+     * Only shown if the user has denied the permission request previously
+     */
     private fun hideRetryView() {
         binding.retryLayout.gone()
     }

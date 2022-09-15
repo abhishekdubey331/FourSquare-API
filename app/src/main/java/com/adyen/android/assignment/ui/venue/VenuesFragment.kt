@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.adyen.android.assignment.R
 import com.adyen.android.assignment.api.model.Result
 import com.adyen.android.assignment.databinding.FragmentVenuesBinding
 import com.adyen.android.assignment.databinding.RetryLayoutBinding
@@ -27,7 +28,18 @@ class VenuesFragment : Fragment() {
 
     private val binding get() = _binding!!
 
-    private val mAdapter = VenueAdapter()
+    private val mAdapter by lazy { VenueAdapter() }
+
+    private var listLastScrollPosition: Int? = null
+
+    companion object {
+        private const val LAST_SCROLL_POSITION_KEY = "LAST_SCROLL_POSITION"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        listLastScrollPosition = savedInstanceState?.getInt(LAST_SCROLL_POSITION_KEY)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,7 +59,7 @@ class VenuesFragment : Fragment() {
             }
         }
         binding.btnCategoryFab.setOnClickListener {
-            navigateToCategoryBottomSheet()
+            openCategoriesBottomSheet()
         }
     }
 
@@ -66,14 +78,19 @@ class VenuesFragment : Fragment() {
 
     private fun handleVenueListState(venues: List<Result>) {
         if (venues.isNotEmpty()) {
-            binding.venueListRecycler.layoutManager = LinearLayoutManager(requireContext())
-            binding.venueListRecycler.adapter = mAdapter
-            mAdapter.submitList(null)
-            mAdapter.submitList(venues)
+            binding.venueListRecycler.run {
+                layoutManager = LinearLayoutManager(requireContext())
+                adapter = mAdapter
+                mAdapter.submitList(null)
+                mAdapter.submitList(venues)
+                listLastScrollPosition?.let { scrollToPosition(it) }
+            }
+        } else {
+            handleErrorState(getString(R.string.message_something_went_wrong_str))
         }
     }
 
-    private fun navigateToCategoryBottomSheet() {
+    private fun openCategoriesBottomSheet() {
         val action = VenuesFragmentDirections.actionVenueFragmentToCategoryBottomSheet()
         findNavController().navigate(action)
     }
@@ -83,6 +100,13 @@ class VenuesFragment : Fragment() {
             binding.progressBar.visibility = View.VISIBLE
         } else {
             binding.progressBar.visibility = View.GONE
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        (binding.venueListRecycler.layoutManager as? LinearLayoutManager)?.let {
+            outState.putInt(LAST_SCROLL_POSITION_KEY, it.findFirstCompletelyVisibleItemPosition())
         }
     }
 

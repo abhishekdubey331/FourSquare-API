@@ -20,7 +20,7 @@ class CashRegister(private val change: Change) {
      * @throws TransactionException If the transaction cannot be performed.
      */
     fun performTransaction(price: Long, amountPaid: Change): Change {
-        // Handle basic validations
+        // Handle basic transaction validations
         return when {
             price < 1 -> throw TransactionException("The price of product is less than 1")
             amountPaid.total < price ->
@@ -35,13 +35,13 @@ class CashRegister(private val change: Change) {
      * and return the minimal amount of change if needed
      *
      * @param toCollect the change to be added to the cash register
-     * @param amountToGiveBack the amount that need to be converted to change
+     * @param amountToReturn the amount that need to be converted to change
      * @return the minimal amount of change if needed
      */
-    private fun collectAmountReturnChange(toCollect: Change, amountToGiveBack: Long): Change {
+    private fun collectAmountReturnChange(toCollect: Change, amountToReturn: Long): Change {
         change.add(toCollect)
         val amountOfChangeToGive = Change()
-        var amountToFind = amountToGiveBack
+        var amountToFind = amountToReturn
         val monetaryElementsAvailable = change.getElements()
         var i = 0
         while (amountToFind != 0L && i < monetaryElementsAvailable.size) {
@@ -49,8 +49,6 @@ class CashRegister(private val change: Change) {
             val monetaryElementCount =
                 amountToFind.toDouble() / currentMonetaryElement.minorValue.toDouble()
             if (monetaryElementCount >= 1) {
-                //If there is enough MonetaryElement in the cash register we take the monetaryElementCount
-                // number otherwise we take all the ones available in the cash register
                 val elementCountToWithdraw =
                     min(monetaryElementCount.toInt(), change.getCount(currentMonetaryElement))
                 amountOfChangeToGive.add(currentMonetaryElement, elementCountToWithdraw)

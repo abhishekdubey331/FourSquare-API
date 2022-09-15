@@ -19,6 +19,12 @@ class GetVenuesUseCaseImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : GetVenuesUseCase {
 
+    /**
+     * This functions returns the response coming from the API
+     *   @param latitude Latitude of user's current location
+     *   @param longitude Longitude of user's current location
+     *  @Emits Flow<ResultState<List<Result>>> Emits Flow state like Loading, Error, Success
+     */
     override fun invoke(latitude: Double, longitude: Double) = flow {
         try {
             emit(ResultState.Loading)

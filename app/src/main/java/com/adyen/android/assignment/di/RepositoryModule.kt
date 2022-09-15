@@ -1,6 +1,5 @@
 package com.adyen.android.assignment.di
 
-import com.adyen.android.assignment.api.VenueRecommendationsQueryBuilder
 import com.adyen.android.assignment.api.VenuesService
 import com.adyen.android.assignment.domain.repository.contract.VenueRepository
 import com.adyen.android.assignment.domain.repository.impl.VenuesRepositoryImpl
@@ -19,10 +18,4 @@ object RepositoryModule {
     fun provideVenueRepository(
         VenuesService: VenuesService
     ): VenueRepository = VenuesRepositoryImpl(VenuesService)
-
-    @Provides
-    @ViewModelScoped
-    fun provideVenueRecommendationsQueryBuilder(): VenueRecommendationsQueryBuilder {
-        return VenueRecommendationsQueryBuilder()
-    }
 }

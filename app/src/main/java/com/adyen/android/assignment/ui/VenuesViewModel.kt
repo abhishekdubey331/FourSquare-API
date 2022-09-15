@@ -19,13 +19,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VenuesViewModel @Inject constructor(
-    private val getVenuesUseCase: GetVenuesUseCase,
     private val fetchLocationUseCase: FetchLocationUseCase,
+    private val getVenuesUseCase: GetVenuesUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
-        private const val TAG = "VenuesViewModel"
         private const val LATITUDE_KEY = "LATITUDE"
         private const val LONGITUDE_KEY = "LONGITUDE"
     }
@@ -37,7 +36,7 @@ class VenuesViewModel @Inject constructor(
     val categoryScreenState = _categoryScreenState.asStateFlow()
 
     init {
-        if (savedStateHandle.contains(LATITUDE_KEY) && savedStateHandle.contains(LONGITUDE_KEY)) {
+        if (hasSavedState(savedStateHandle)) {
             val latitude = savedStateHandle.get<Double>(LATITUDE_KEY) ?: 0.0
             val longitude = savedStateHandle.get<Double>(LONGITUDE_KEY) ?: 0.0
             fetchNearByVenues(latitude, longitude)
@@ -46,6 +45,11 @@ class VenuesViewModel @Inject constructor(
         }
     }
 
+    /**
+     *   Fetch nearby venues by latitude and longitude and update ui states
+     *   @param latitude Latitude of user's current location
+     *   @param longitude Longitude of user's current location
+     */
     fun fetchLocationTriggerVenueRequest() {
         viewModelScope.launch {
             fetchLocationUseCase.invoke().collect { result ->
@@ -61,12 +65,8 @@ class VenuesViewModel @Inject constructor(
                     is ResultState.Success -> {
                         val latitude = result.data.latitude
                         val longitude = result.data.longitude
-                        savedStateHandle[LATITUDE_KEY] = latitude
-                        savedStateHandle[LONGITUDE_KEY] = longitude
-                        fetchNearByVenues(
-                            result.data.latitude,
-                            result.data.longitude
-                        )
+                        saveLatLongToSavedStateBundle(latitude, longitude)
+                        fetchNearByVenues(latitude, longitude)
                     }
 
                     is ResultState.Failure -> _venueScreenState.update {
@@ -80,6 +80,12 @@ class VenuesViewModel @Inject constructor(
         }
     }
 
+
+    /**
+     *   Fetch nearby venues by latitude and longitude and update ui states
+     *   @param latitude Latitude of user's current location
+     *   @param longitude Longitude of user's current location
+     */
     private fun fetchNearByVenues(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             getVenuesUseCase.invoke(latitude, longitude).collect { result ->
@@ -98,10 +104,9 @@ class VenuesViewModel @Inject constructor(
                                 filteredList = result.data,
                                 loading = false
                             )
-                        }.also {
-                            _categoryScreenState.update { categoryState ->
-                                categoryState.copy(categories = getCategoryList(result.data))
-                            }
+                        }
+                        _categoryScreenState.update {
+                            it.copy(categories = getCategoryList(result.data))
                         }
                     }
 
@@ -116,12 +121,23 @@ class VenuesViewModel @Inject constructor(
         }
     }
 
-    private fun getCategoryList(result: List<Result>) = result.asSequence()
+    /**
+     *   Update venueScreenState with filtered list and set active category
+     *   @param result complete venue list
+     *   @return List<Category> Distinct list of categories
+     */
+    private fun getCategoryList(result: List<Result>) = result
+        .asSequence()
         .map { it.categories }
         .flatten()
         .distinct()
         .toList()
 
+
+    /**
+     *   Update venueScreenState with filtered list and set active category
+     *   @param category to filter
+     */
     fun updateFilteredListByCategory(category: Category) {
         _venueScreenState.update {
             it.copy(filteredList = getFilteredListByCategory(category.id))
@@ -129,6 +145,11 @@ class VenuesViewModel @Inject constructor(
         _categoryScreenState.update { it.copy(activeCategory = category) }
     }
 
+    /**
+     *   Return a filtered list based on category id
+     *   @param categoryId to filter
+     *  @return List<Result> Filtered list by category
+     */
     private fun getFilteredListByCategory(categoryId: String) = venueScreenState.value
         .allVenueList.filter { venue ->
             venue.categories.any {
@@ -136,8 +157,34 @@ class VenuesViewModel @Inject constructor(
             }
         }
 
+    /**
+     *  Remove active category and update filtered list with all contents of venue list
+     */
     fun clearFilters() {
         _venueScreenState.update { it.copy(filteredList = it.allVenueList) }
         _categoryScreenState.update { it.copy(activeCategory = null) }
+    }
+
+    /**
+     *   Set latitude and longitude to savedStateHandle to reuse save coordinates
+     *   in case of process death
+     *   @param latitude Latitude of user's current location
+     *   @param longitude Longitude of user's current location
+     *   @return List<Category> Distinct list of categories
+     */
+    private fun saveLatLongToSavedStateBundle(latitude: Double, longitude: Double) {
+        savedStateHandle[LATITUDE_KEY] = latitude
+        savedStateHandle[LONGITUDE_KEY] = longitude
+    }
+
+    /**
+     *   Check if coordinates are present in case of restart after process death
+     *   in case of process death
+     *   @param savedStateHandle Latitude of user's current location
+     *   @return Boolean if state was saved for Lat and Lng
+     */
+    private fun hasSavedState(savedStateHandle: SavedStateHandle): Boolean {
+        return savedStateHandle.contains(LATITUDE_KEY)
+                && savedStateHandle.contains(LONGITUDE_KEY)
     }
 }

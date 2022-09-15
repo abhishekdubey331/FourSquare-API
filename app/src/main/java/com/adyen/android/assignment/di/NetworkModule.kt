@@ -2,6 +2,7 @@ package com.adyen.android.assignment.di
 
 import com.adyen.android.assignment.BuildConfig
 import com.adyen.android.assignment.api.VenuesService
+import com.adyen.android.assignment.common.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,6 +33,12 @@ object NetworkModule {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         return OkHttpClient.Builder()
             .addInterceptor(logging)
+            .addInterceptor { chain ->
+                val newRequest = chain.request().newBuilder()
+                    .addHeader(Constants.AUTHORIZATION_KEY, BuildConfig.API_KEY)
+                    .build()
+                chain.proceed(newRequest)
+            }
             .build()
     }
 }
